@@ -15,4 +15,4 @@ export type UserSession = {
   onboardingComplete: boolean;
 };
 
-export type AppScreen = "auth" | "preferences" | "planner";
+export type AppScreen = "auth" | "home" | "preferences" | "planner";

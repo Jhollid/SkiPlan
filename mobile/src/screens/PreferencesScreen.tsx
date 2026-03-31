@@ -1,58 +1,100 @@
-import { StyleSheet, Switch, Text, View } from "react-native";
+import { StyleSheet, Switch, Text, TextInput, View } from "react-native";
 
 import { PrimaryButton } from "../components/PrimaryButton";
 import { ScreenCard } from "../components/ScreenCard";
+import { SelectableChipGroup } from "../components/SelectableChipGroup";
+import { SelectableMultiChipGroup } from "../components/SelectableMultiChipGroup";
 import { Difficulty, RoutingStyle, UserPreferences } from "../types/app";
 
 type Props = {
   preferences: UserPreferences;
   onChange: (preferences: UserPreferences) => void;
   onContinue: () => void;
+  mode?: "onboarding" | "edit";
 };
 
 const DIFFICULTIES: Difficulty[] = ["green", "blue", "red", "black"];
 const ROUTING_STYLES: RoutingStyle[] = ["fastest", "enjoyable"];
+const LIFT_TYPES = ["gondola", "chair-lift", "drag-lift", "t-bar", "platter"];
 
-export function PreferencesScreen({ preferences, onChange, onContinue }: Props) {
+export function PreferencesScreen({
+  preferences,
+  onChange,
+  onContinue,
+  mode = "onboarding",
+}: Props) {
+  const favoriteRunsInput = preferences.favoriteRuns.join(", ");
+  const isEditMode = mode === "edit";
+
+  function toggleLiftType(liftType: string) {
+    const excludedLiftTypes = preferences.excludedLiftTypes.includes(liftType)
+      ? preferences.excludedLiftTypes.filter((item) => item !== liftType)
+      : [...preferences.excludedLiftTypes, liftType];
+
+    onChange({ ...preferences, excludedLiftTypes });
+  }
+
+  function updateFavoriteRuns(value: string) {
+    const favoriteRuns = value
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    onChange({ ...preferences, favoriteRuns });
+  }
+
   return (
     <ScreenCard
-      title="Onboarding preferences"
-      subtitle="Capture the route constraints now so the planner logic and future backend profile stay consistent."
+      title={isEditMode ? "Edit route preferences" : "Onboarding preferences"}
+      subtitle={
+        isEditMode
+          ? "Update your saved route constraints and return to the planner without restarting the flow."
+          : "Capture the route constraints now so the planner logic and future backend profile stay consistent."
+      }
     >
-      <View style={styles.section}>
-        <Text style={styles.label}>Maximum difficulty</Text>
-        <View style={styles.chipRow}>
-          {DIFFICULTIES.map((difficulty) => (
-            <Text
-              key={difficulty}
-              style={[
-                styles.chip,
-                preferences.maxDifficulty === difficulty ? styles.chipSelected : null,
-              ]}
-              onPress={() => onChange({ ...preferences, maxDifficulty: difficulty })}
-            >
-              {difficulty}
-            </Text>
-          ))}
-        </View>
-      </View>
+      <SelectableChipGroup
+        label="Maximum difficulty"
+        selectedValue={preferences.maxDifficulty}
+        options={DIFFICULTIES.map((difficulty) => ({
+          label: difficulty,
+          value: difficulty,
+        }))}
+        onSelect={(maxDifficulty) =>
+          onChange({ ...preferences, maxDifficulty: maxDifficulty as Difficulty })
+        }
+      />
+
+      <SelectableChipGroup
+        label="Routing style"
+        selectedValue={preferences.routingStyle}
+        options={ROUTING_STYLES.map((routingStyle) => ({
+          label: routingStyle,
+          value: routingStyle,
+        }))}
+        onSelect={(routingStyle) =>
+          onChange({ ...preferences, routingStyle: routingStyle as RoutingStyle })
+        }
+      />
+
+      <SelectableMultiChipGroup
+        label="Lift types to avoid"
+        selectedValues={preferences.excludedLiftTypes}
+        options={LIFT_TYPES.map((liftType) => ({ label: liftType, value: liftType }))}
+        helper="Select any lifts the route planner should exclude."
+        onToggle={toggleLiftType}
+      />
 
       <View style={styles.section}>
-        <Text style={styles.label}>Routing style</Text>
-        <View style={styles.chipRow}>
-          {ROUTING_STYLES.map((routingStyle) => (
-            <Text
-              key={routingStyle}
-              style={[
-                styles.chip,
-                preferences.routingStyle === routingStyle ? styles.chipSelected : null,
-              ]}
-              onPress={() => onChange({ ...preferences, routingStyle })}
-            >
-              {routingStyle}
-            </Text>
-          ))}
-        </View>
+        <Text style={styles.label}>Favorite runs</Text>
+        <Text style={styles.helper}>
+          Add comma-separated run names to help the planner favor them when they fit logically.
+        </Text>
+        <TextInput
+          value={favoriteRunsInput}
+          onChangeText={updateFavoriteRuns}
+          placeholder="Blue 64, Red 10"
+          style={styles.input}
+        />
       </View>
 
       <View style={styles.switchRow}>
@@ -66,7 +108,7 @@ export function PreferencesScreen({ preferences, onChange, onContinue }: Props) 
         />
       </View>
 
-      <PrimaryButton label="Save preferences" onPress={onContinue} />
+      <PrimaryButton label={isEditMode ? "Return to planner" : "Save preferences"} onPress={onContinue} />
     </ScreenCard>
   );
 }
@@ -84,24 +126,13 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
   },
-  chipRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  chip: {
+  input: {
+    borderWidth: 1,
+    borderColor: "#D3DBE4",
+    borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 999,
-    backgroundColor: "#E8EEF5",
-    color: "#234",
-    overflow: "hidden",
-    textTransform: "capitalize",
-  },
-  chipSelected: {
-    backgroundColor: "#0B3D91",
-    color: "#FFFFFF",
-    fontWeight: "700",
+    paddingVertical: 10,
+    backgroundColor: "#F9FBFD",
   },
   switchRow: {
     flexDirection: "row",

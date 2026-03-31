@@ -61,3 +61,18 @@ export type RoutePlan = {
   };
   steps: RouteStep[];
 };
+
+export type RecentRoute = {
+  routeId: string;
+  resortSlug: string;
+  resortName: string;
+  startNodeKey: string;
+  startLabel: string;
+  endNodeKey: string;
+  endLabel: string;
+  totalSteps: number;
+  totalLifts: number;
+  totalRuns: number;
+  estimatedVertical: number;
+  createdAt: string;
+};
